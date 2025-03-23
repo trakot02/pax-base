@@ -1,112 +1,134 @@
-#ifndef PAX_BASE
-#define PAX_BASE
+#ifndef PAX_BASE_HPP
+#define PAX_BASE_HPP
 
-#define PAX_SYSTEM_UNKNOWN 1
-#define PAX_COMP_UNKNOWN 1
-#define PAX_ARCH_UNKNOWN 1
-
-#if _WIN32
-
-    #define PAX_SYSTEM_WINDOWS 1
-    #undef  PAX_SYSTEM_UNKNOWN
-
-#endif
-
-#if _MSC_VER
-
-    #define PAX_COMP_MSVC 1
-    #undef  PAX_COMP_UNKNOWN
-
-#endif
-
-#if _WIN64 || __LP64__ || __x86_64__ || __amd64__ || __aarch64__
-
-    #define PAX_ARCH_64 1
-    #undef  PAX_ARCH_UNKNOWN
-
-#elif _WIN32 || __ILP32__ || _i386_
-
-    #define PAX_ARCH_32 1
-    #undef  PAX_ARCH_UNKNOWN
-
-#endif
+#include "pax_defs.hpp"
 
 namespace pax {
 
-typedef float  f32;
-typedef double f64;
+//
+// Values
+//
 
-typedef char           i8;
-typedef unsigned char  u8;
-typedef short          i16;
-typedef unsigned short u16;
+static const u8* const UTF_ERROR_NAMES[] = {
+    (const u8*) PAX_TO_STRING(UTF_ERROR_NONE),
+    (const u8*) PAX_TO_STRING(UTF_ERROR_UNREACHABLE),
+    (const u8*) PAX_TO_STRING(UTF_ERROR_INVALID),
+    (const u8*) PAX_TO_STRING(UTF_ERROR_OVERLONG),
+    (const u8*) PAX_TO_STRING(UTF_ERROR_SURROGATE),
+    (const u8*) PAX_TO_STRING(UTF_ERROR_OUT_OF_BOUNDS),
+};
 
-#if PAX_ARCH_64
+//
+// Types
+//
 
-    typedef int                i32;
-    typedef unsigned int       u32;
-    typedef long long          i64;
-    typedef unsigned long long u64;
+struct String_8 {
+    u8*   memory;
+    isize length;
+};
 
-    typedef long long          isize;
-    typedef unsigned long long usize;
+struct String_16 {
+    u16*  memory;
+    isize length;
+};
 
-#elif PAX_ARCH_32
+struct String_32 {
+    u32*  memory;
+    isize length;
+};
 
-    typedef long               i32;
-    typedef unsigned long      u32;
-    typedef long long          i64;
-    typedef unsigned long long u64;
+using String = String_8;
 
-    typedef long          isize;
-    typedef unsigned long usize;
+enum Utf_Error {
+    UTF_ERROR_NONE,
+    UTF_ERROR_UNREACHABLE,
+    UTF_ERROR_INVALID,
+    UTF_ERROR_OVERLONG,
+    UTF_ERROR_SURROGATE,
+    UTF_ERROR_OUT_OF_BOUNDS,
+};
 
-#endif
+struct Utf_Result {
+    u32       value;
+    isize     units;
+    Utf_Error error;
+};
 
-typedef void* pntr;
+struct Mem_Block {
+    u8*   memory;
+    isize length;
+};
 
-}
+struct Mem_Arena {
+    u8*   memory;
+    isize length;
+    isize offset;
+};
 
-#define PAX_SIZE_OF(x)  ((pax::isize)(sizeof  (x)))
-#define PAX_ALIGN_OF(x) ((pax::isize)(alignof (x)))
+//
+// Procs
+//
 
-#define PAX_ARRAY_LENGTH(array) (PAX_SIZE_OF(array))
-#define PAX_ARRAY_STRIDE(array) (PAX_SIZE_OF((array)[0]))
-#define PAX_ARRAY_ITEMS(array)  (PAX_ARRAY_LENGTH(array) / PAX_ARRAY_STRIDE(array))
+/* Unicode, UTF-8, UTF-16, UTF-32 */
 
-#define PAX_TEST(cond) ((cond) ? 1 : -1)
+bool unicode_is_valid(u32 value);
 
-namespace pax_impl
-{
-    using namespace pax;
+bool unicode_is_invalid(u32 value);
 
-    static u8 test_size_of_f32[PAX_TEST(PAX_SIZE_OF(f32) == 4)];
-    static u8 test_size_of_f64[PAX_TEST(PAX_SIZE_OF(f64) == 8)];
+bool unicode_is_surrogate(u32 value);
 
-    static u8 test_size_of_i8[PAX_TEST(PAX_SIZE_OF(i8) == 1)];
-    static u8 test_size_of_u8[PAX_TEST(PAX_SIZE_OF(u8) == 1)];
+bool unicode_is_surr_low(u32 value);
 
-    static u8 test_size_of_i16[PAX_TEST(PAX_SIZE_OF(i16) == 2)];
-    static u8 test_size_of_u16[PAX_TEST(PAX_SIZE_OF(u16) == 2)];
+bool unicode_is_surr_high(u32 value);
 
-    static u8 test_size_of_i32[PAX_TEST(PAX_SIZE_OF(i32) == 4)];
-    static u8 test_size_of_u32[PAX_TEST(PAX_SIZE_OF(u32) == 4)];
+isize utf8_get_units(u32 value);
 
-    static u8 test_size_of_i64[PAX_TEST(PAX_SIZE_OF(i64) == 8)];
-    static u8 test_size_of_u64[PAX_TEST(PAX_SIZE_OF(u64) == 8)];
+isize utf8_get_units_ahead(u8 value);
 
-    static u8 test_size_of_isize[
-        PAX_TEST(PAX_SIZE_OF(isize) == PAX_SIZE_OF(pntr))];
+bool utf8_is_trailing(u8 value);
 
-    static u8 test_size_of_usize[
-        PAX_TEST(PAX_SIZE_OF(usize) == PAX_SIZE_OF(pntr))];
+bool utf8_is_overlong(u32 value, isize units);
 
-}
+bool str8_init(String_8* self, u8* value, isize limit);
 
-#define PAX_MAX(x, y) ((x) < (y) ? (y) : (x))
-#define PAX_MIN(x, y) ((x) < (y) ? (x) : (y))
+bool str8_from_utf16(String_8* self, String_16* string, Mem_Arena* arena);
 
-#define PAX_LIMIT_TOP(x, y)    PAX_MIN((x), (y))
-#define PAX_LIMIT_BOTTOM(x, y) PAX_MAX((x), (y))
+Utf_Result str8_encode(String_8* self, isize index, u32 value);
 
-#endif
+Utf_Result str8_decode(String_8* self, isize index);
+
+isize str8_count_as_utf16(String_8* self);
+
+isize utf16_get_units(u32 value);
+
+isize utf16_get_units_ahead(u16 value);
+
+bool str16_init(String_16* self, u16* value, isize limit);
+
+bool str16_from_utf8(String_16* self, String_8* string, Mem_Arena* arena);
+
+Utf_Result str16_encode(String_16* self, isize index, u32 value);
+
+Utf_Result str16_decode(String_16* self, isize index);
+
+isize str16_count_as_utf8(String_16* self);
+
+/* Arena */
+
+isize align_by(isize value, isize align);
+
+void arena_init(Mem_Arena* self, Mem_Block block);
+
+void arena_clear(Mem_Arena* arena);
+
+ptr arena_push(Mem_Arena* arena, isize bytes, isize align);
+
+ptr arena_push_array(Mem_Arena* arena, isize items, isize stride, isize align);
+
+bool arena_pop(Mem_Arena* arena, isize marker);
+
+} // namespace pax
+
+#define PAX_STR8(x) String_8 {(u8*)(x), PAX_ARRAY_ITEMS(x) - 1}
+
+#endif // PAX_BASE_HPP

@@ -1,29 +1,24 @@
 #include <stdio.h>
 
+#include "pax_defs.hpp"
 #include "pax_base.hpp"
 #include "pax_system.hpp"
 
 using namespace pax;
 
-u32 points[4]   = {0x1f600, 0x1f600, 0x1f600, 0x1f600};
-u8  memory[256] = {};
-
 int main()
 {
-    Mem_Arena arena;
+    Mem_Arena   arena = {};
+    File_Handle file  = {};
 
-    if (arena_init(&arena, system_reserve(1)) == false)
-        return 1;
+    arena_init(&arena, system_reserve(1));
 
-    String_UTF8 filename;
+    String_8 filename = PAX_STR8("./😀.txt");
 
-    if (str8_init(&filename, (u8*)("src/😀😁.txt"), 50) == false)
-        return 1;
+    File_Error error = file_create_if_new(&file, &filename, &arena);
 
-    File_Result result = file_create_always(&filename, &arena);
-
-    if (result.error == FILE_ERROR_NONE) {
-        printf("File (%u) created...\n", result.value);
-    } else
-        printf("Unable to create file...\n");
+    if (error != FILE_ERROR_NONE)
+        printf("Unable to create file %s '%s'...\n", FILE_ERROR_NAMES[error], filename.memory);
+    else
+        printf("Created file %p '%s'...\n", file, filename.memory);
 }
