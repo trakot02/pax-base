@@ -99,25 +99,4 @@ using ptr = void*;
 
 } // namespace pax
 
-#define PAX_TO_STRING_IMPL(x) #x
-#define PAX_TO_STRING(x) PAX_TO_STRING_IMPL(x)
-
-#define PAX_CONCAT_IMPL(x, y) x##y
-#define PAX_CONCAT(x, y) PAX_CONCAT_IMPL(x, y)
-
-#define PAX_SIZE_OF(x)  sizeof(x)
-#define PAX_ALIGN_OF(x) alignof(x)
-
-#define PAX_ARRAY_LENGTH(x) PAX_SIZE_OF((x))
-#define PAX_ARRAY_STRIDE(x) PAX_SIZE_OF((x)[0])
-
-#define PAX_ARRAY_ITEMS(x) (PAX_ARRAY_LENGTH(x) / PAX_ARRAY_STRIDE(x))
-
-#define PAX_MAX(x, y) ((x) < (y) ? (y) : (x))
-#define PAX_MIN(x, y) ((x) < (y) ? (x) : (y))
-
-#define PAX_CLAMP_TOP(x, y)    PAX_MIN((x), (y))
-#define PAX_CLAMP_BOTTOM(x, y) PAX_MAX((x), (y))
-#define PAX_CLAMP(x, y, z)     PAX_MAX(x, PAX_MIN(y, z))
-
 #endif // PAX_DEFS_HPP

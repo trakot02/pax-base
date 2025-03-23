@@ -3,6 +3,27 @@
 
 #include "pax_defs.hpp"
 
+#define __PAX_TO_STRING__(x) #x
+#define __PAX_CONCAT__(x, y) x##y
+
+#define PAX_TO_STRING(x) __PAX_TO_STRING__(x)
+#define PAX_CONCAT(x, y) __PAX_CONCAT__(x, y)
+
+#define PAX_SIZE_OF(x)  sizeof(x)
+#define PAX_ALIGN_OF(x) alignof(x)
+
+#define PAX_ARRAY_LENGTH(x) PAX_SIZE_OF((x))
+#define PAX_ARRAY_STRIDE(x) PAX_SIZE_OF((x)[0])
+
+#define PAX_ARRAY_ITEMS(x) (PAX_ARRAY_LENGTH(x) / PAX_ARRAY_STRIDE(x))
+
+#define PAX_MAX(x, y) ((x) < (y) ? (y) : (x))
+#define PAX_MIN(x, y) ((x) < (y) ? (x) : (y))
+
+#define PAX_CLAMP_TOP(x, y)    PAX_MIN((x), (y))
+#define PAX_CLAMP_BOTTOM(x, y) PAX_MAX((x), (y))
+#define PAX_CLAMP(x, y, z)     PAX_MAX(x, PAX_MIN(y, z))
+
 namespace pax {
 
 //
@@ -91,13 +112,13 @@ bool utf8_is_overlong(u32 value, isize units);
 
 bool str8_init(String_8* self, u8* value, isize limit);
 
-bool str8_from_utf16(String_8* self, String_16* string, Mem_Arena* arena);
+bool str8_from_utf16(String_8* self, String_16 string, Mem_Arena* arena);
 
-Utf_Result str8_encode(String_8* self, isize index, u32 value);
+Utf_Result str8_encode(String_8 self, isize index, u32 value);
 
-Utf_Result str8_decode(String_8* self, isize index);
+Utf_Result str8_decode(String_8 self, isize index);
 
-isize str8_count_as_utf16(String_8* self);
+isize str8_count_as_utf16(String_8 self);
 
 isize utf16_get_units(u32 value);
 
@@ -105,13 +126,13 @@ isize utf16_get_units_ahead(u16 value);
 
 bool str16_init(String_16* self, u16* value, isize limit);
 
-bool str16_from_utf8(String_16* self, String_8* string, Mem_Arena* arena);
+bool str16_from_utf8(String_16* self, String_8 string, Mem_Arena* arena);
 
-Utf_Result str16_encode(String_16* self, isize index, u32 value);
+Utf_Result str16_encode(String_16 self, isize index, u32 value);
 
-Utf_Result str16_decode(String_16* self, isize index);
+Utf_Result str16_decode(String_16 self, isize index);
 
-isize str16_count_as_utf8(String_16* self);
+isize str16_count_as_utf8(String_16 self);
 
 /* Arena */
 
@@ -121,14 +142,20 @@ void arena_init(Mem_Arena* self, Mem_Block block);
 
 void arena_clear(Mem_Arena* arena);
 
-ptr arena_push(Mem_Arena* arena, isize bytes, isize align);
+Mem_Block arena_push(Mem_Arena* arena, isize bytes, isize align);
 
-ptr arena_push_array(Mem_Arena* arena, isize items, isize stride, isize align);
+Mem_Block arena_push_array(Mem_Arena* arena, isize items, isize stride, isize align);
 
 bool arena_pop(Mem_Arena* arena, isize marker);
 
 } // namespace pax
 
-#define PAX_STR8(x) String_8 {(u8*)(x), PAX_ARRAY_ITEMS(x) - 1}
+#define PAX_BYTE_PTR(x) ((pax::u8*)(x))
+
+#define PAX_STR_8(x) \
+    String_8 {(pax::u8*)(x), PAX_ARRAY_ITEMS(x) - 1}
+
+#define PAX_BLOCK(x) \
+    Mem_Block {(pax::u8*)(x), PAX_ARRAY_LENGTH(x)}
 
 #endif // PAX_BASE_HPP

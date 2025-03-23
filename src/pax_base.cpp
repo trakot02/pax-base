@@ -88,25 +88,25 @@ bool str8_init(String_8* self, u8* value, isize limit)
     return true;
 }
 
-bool str8_from_utf16(String_8* self, String_16* string, Mem_Arena* arena)
+bool str8_from_utf16(String_8* self, String_16 string, Mem_Arena* arena)
 {
     String_8 result = {};
 
     isize marker = arena->offset;
     isize units  = str16_count_as_utf8(string);
 
-    u8* memory = (u8*) arena_push_array(arena, units + 1,
+    Mem_Block block = arena_push_array(arena, units + 1,
         PAX_SIZE_OF(u8), PAX_ALIGN_OF(u8));
 
-    if (memory == 0) return false;
+    if (block.memory == 0) return false;
 
-    result.memory = memory;
+    result.memory = (u8*)(block.memory);
     result.length = units;
 
     isize index = 0;
     isize other = 0;
 
-    while (index < string->length) {
+    while (index < string.length) {
         Utf_Result decode = str16_decode(string, index);
 
         if (decode.error != UTF_ERROR_NONE) {
@@ -115,7 +115,7 @@ bool str8_from_utf16(String_8* self, String_16* string, Mem_Arena* arena)
             return false;
         }
 
-        Utf_Result encode = str8_encode(&result, other,
+        Utf_Result encode = str8_encode(result, other,
             decode.value);
 
         if (encode.error != UTF_ERROR_NONE) {
@@ -134,13 +134,13 @@ bool str8_from_utf16(String_8* self, String_16* string, Mem_Arena* arena)
     return true;
 }
 
-Utf_Result str8_encode(String_8* self, isize index, u32 value)
+Utf_Result str8_encode(String_8 self, isize index, u32 value)
 {
     Utf_Result result = {};
 
     isize units  = utf8_get_units(value);
     isize stop   = index + units;
-    u8*   memory = self->memory + index;
+    u8*   memory = self.memory + index;
 
     if (unicode_is_invalid(value) == true)
         result.error = UTF_ERROR_INVALID;
@@ -148,7 +148,7 @@ Utf_Result str8_encode(String_8* self, isize index, u32 value)
     if (unicode_is_surrogate(value) == true)
         result.error = UTF_ERROR_SURROGATE;
 
-    if (index < 0 || stop > self->length)
+    if (index < 0 || stop > self.length)
         result.error = UTF_ERROR_OUT_OF_BOUNDS;
 
     if (result.error != UTF_ERROR_NONE) return result;
@@ -187,20 +187,20 @@ Utf_Result str8_encode(String_8* self, isize index, u32 value)
     return result;
 }
 
-Utf_Result str8_decode(String_8* self, isize index)
+Utf_Result str8_decode(String_8 self, isize index)
 {
     Utf_Result result = {};
 
     u32   value  = 0;
     isize units  = 0;
-    u8*   memory = self->memory + index;
+    u8*   memory = self.memory + index;
 
-    if (index < 0 || index > self->length)
+    if (index < 0 || index > self.length)
         result.error = UTF_ERROR_OUT_OF_BOUNDS;
     else
         units = utf8_get_units_ahead(memory[0]);
 
-    if (index + units > self->length)
+    if (index + units > self.length)
         result.error = UTF_ERROR_OUT_OF_BOUNDS;
 
     for (isize i = 1; i < units; i += 1) {
@@ -251,12 +251,12 @@ Utf_Result str8_decode(String_8* self, isize index)
     return result;
 }
 
-isize str8_count_as_utf16(String_8* self)
+isize str8_count_as_utf16(String_8 self)
 {
     isize index  = 0;
     isize result = 0;
 
-    while (index < self->length) {
+    while (index < self.length) {
         Utf_Result decode = str8_decode(self, index);
 
         if (decode.error != UTF_ERROR_NONE)
@@ -314,25 +314,25 @@ bool str16_init(String_16* self, u16* value, isize limit)
     return true;
 }
 
-bool str16_from_utf8(String_16* self, String_8* string, Mem_Arena* arena)
+bool str16_from_utf8(String_16* self, String_8 string, Mem_Arena* arena)
 {
     String_16 result = {};
 
     isize marker = arena->offset;
     isize units  = str8_count_as_utf16(string);
 
-    u16* memory = (u16*) arena_push_array(arena, units + 1,
+    Mem_Block block = arena_push_array(arena, units + 1,
         PAX_SIZE_OF(u16), PAX_ALIGN_OF(u16));
 
-    if (memory == 0) return false;
+    if (block.memory == 0) return false;
 
-    result.memory = memory;
+    result.memory = (u16*)(block.memory);
     result.length = units;
 
     isize index = 0;
     isize other = 0;
 
-    while (index < string->length) {
+    while (index < string.length) {
         Utf_Result decode = str8_decode(string, index);
 
         if (decode.error != UTF_ERROR_NONE) {
@@ -341,7 +341,7 @@ bool str16_from_utf8(String_16* self, String_8* string, Mem_Arena* arena)
             return false;
         }
 
-        Utf_Result encode = str16_encode(&result, other,
+        Utf_Result encode = str16_encode(result, other,
             decode.value);
 
         if (encode.error != UTF_ERROR_NONE) {
@@ -360,13 +360,13 @@ bool str16_from_utf8(String_16* self, String_8* string, Mem_Arena* arena)
     return true;
 }
 
-Utf_Result str16_encode(String_16* self, isize index, u32 value)
+Utf_Result str16_encode(String_16 self, isize index, u32 value)
 {
     Utf_Result result = {};
 
     isize units  = utf16_get_units(value);
     isize stop   = index + units;
-    u16*  memory = self->memory + index;
+    u16*  memory = self.memory + index;
 
     if (unicode_is_invalid(value) == true)
         result.error = UTF_ERROR_INVALID;
@@ -374,7 +374,7 @@ Utf_Result str16_encode(String_16* self, isize index, u32 value)
     if (unicode_is_surrogate(value) == true)
         result.error = UTF_ERROR_SURROGATE;
 
-    if (index < 0 || stop > self->length)
+    if (index < 0 || stop > self.length)
         result.error = UTF_ERROR_OUT_OF_BOUNDS;
 
     if (result.error != UTF_ERROR_NONE) return result;
@@ -402,20 +402,20 @@ Utf_Result str16_encode(String_16* self, isize index, u32 value)
     return result;
 }
 
-Utf_Result str16_decode(String_16* self, isize index)
+Utf_Result str16_decode(String_16 self, isize index)
 {
     Utf_Result result = {};
 
     u32   value  = 0;
     isize units  = 0;
-    u16*  memory = self->memory + index;
+    u16*  memory = self.memory + index;
 
-    if (index < 0 || index > self->length)
+    if (index < 0 || index > self.length)
         result.error = UTF_ERROR_OUT_OF_BOUNDS;
     else
         units = utf16_get_units_ahead(memory[0]);
 
-    if (index + units > self->length)
+    if (index + units > self.length)
         result.error = UTF_ERROR_OUT_OF_BOUNDS;
 
     if (result.error != UTF_ERROR_NONE) return result;
@@ -445,12 +445,12 @@ Utf_Result str16_decode(String_16* self, isize index)
     return result;
 }
 
-isize str16_count_as_utf8(String_16* self)
+isize str16_count_as_utf8(String_16 self)
 {
     isize index  = 0;
     isize result = 0;
 
-    while (index < self->length) {
+    while (index < self.length) {
         Utf_Result decode = str16_decode(self, index);
 
         if (decode.error != UTF_ERROR_NONE)
@@ -489,9 +489,10 @@ void arena_clear(Mem_Arena* self)
     self->offset = 0;
 }
 
-ptr arena_push(Mem_Arena* self, isize bytes, isize align)
+Mem_Block arena_push(Mem_Arena* self, isize bytes, isize align)
 {
-    ptr  result = 0;
+    Mem_Block result = {};
+
     isize offset = align_by(self->offset, align);
     u8*   memory = self->memory + offset;
 
@@ -500,7 +501,8 @@ ptr arena_push(Mem_Arena* self, isize bytes, isize align)
     if (offset + bytes > self->length)
         return result;
 
-    result = memory;
+    result.memory = memory;
+    result.length = bytes;
 
     self->offset = offset + bytes;
 
@@ -510,7 +512,7 @@ ptr arena_push(Mem_Arena* self, isize bytes, isize align)
     return result;
 }
 
-ptr arena_push_array(Mem_Arena* self, isize items, isize stride, isize align)
+Mem_Block arena_push_array(Mem_Arena* self, isize items, isize stride, isize align)
 {
     return arena_push(self, items * stride, align);
 }

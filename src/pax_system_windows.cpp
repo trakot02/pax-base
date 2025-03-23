@@ -52,7 +52,7 @@ void system_release_impl(Mem_Block block)
     VirtualFree(block.memory, 0, MEM_RELEASE);
 }
 
-File_Error file_create_if_new_impl(File_Impl* self, String_8* filename, Mem_Arena* arena)
+File_Error file_create_impl(File_Impl* self, String_8 filename, Mem_Arena* arena)
 {
     String_16 result = {};
 
@@ -83,7 +83,7 @@ File_Error file_create_if_new_impl(File_Impl* self, String_8* filename, Mem_Aren
     return FILE_ERROR_UNKNOWN;
 }
 
-File_Error file_create_always_impl(File_Impl* self, String_8* filename, Mem_Arena* arena)
+File_Error file_create_always_impl(File_Impl* self, String_8 filename, Mem_Arena* arena)
 {
     String_16 result = {};
 
@@ -114,7 +114,7 @@ File_Error file_create_always_impl(File_Impl* self, String_8* filename, Mem_Aren
     return FILE_ERROR_UNKNOWN;
 }
 
-File_Error file_open_if_exists_impl(File_Impl* self, String_8* filename, Mem_Arena* arena)
+File_Error file_open_impl(File_Impl* self, String_8 filename, Mem_Arena* arena)
 {
     String_16 result = {};
 
@@ -151,6 +151,36 @@ void file_close_impl(File_Impl* self)
         CloseHandle(self->handle);
 
     self->handle = 0;
+}
+
+File_Result file_read_impl(File_Impl* self, Mem_Block* block)
+{
+    File_Result result = {};
+
+    if (block->memory == 0 || block->length <= 0)
+        result.error = FILE_ERROR_BLOCK_IS_NULL;
+
+    if (result.error != FILE_ERROR_NONE) return result;
+
+    usize bytes = 0;
+
+    i32 state = ReadFile(self->handle, block->memory,
+        block->length, (LPDWORD)(&bytes), 0);
+
+    if (state == 0 || bytes > block->length) {
+        switch (GetLastError()) {
+            case ERROR_HANDLE_EOF: {
+                result.bytes = bytes;
+            } break;
+
+            default: {
+                result.error = FILE_ERROR_UNKNOWN;
+            } break;
+        }
+    } else
+        result.bytes = bytes;
+
+    return result;
 }
 
 } // namespace pax
