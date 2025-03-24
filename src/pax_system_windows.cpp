@@ -62,7 +62,7 @@ File_Error file_create_impl(File_Impl* self, String_8 filename, Mem_Arena* arena
 
     isize marker = arena->offset;
 
-    if (str16_from_utf8(&result, filename, arena) == false)
+    if (str8_to_utf16(filename, &result, arena) == false)
         return FILE_ERROR_PATH_ENCODING;
 
     self->handle = CreateFileW((wchar_t*)(result.memory),
@@ -93,7 +93,7 @@ File_Error file_create_always_impl(File_Impl* self, String_8 filename, Mem_Arena
 
     isize marker = arena->offset;
 
-    if (str16_from_utf8(&result, filename, arena) == false)
+    if (str8_to_utf16(filename, &result, arena) == false)
         return FILE_ERROR_PATH_ENCODING;
 
     self->handle = CreateFileW((wchar_t*)(result.memory),
@@ -124,7 +124,7 @@ File_Error file_open_impl(File_Impl* self, String_8 filename, Mem_Arena* arena)
 
     isize marker = arena->offset;
 
-    if (str16_from_utf8(&result, filename, arena) == false)
+    if (str8_to_utf16(filename, &result, arena) == false)
         return FILE_ERROR_PATH_ENCODING;
 
     self->handle = CreateFileW((wchar_t*)(result.memory),

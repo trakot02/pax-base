@@ -6,42 +6,17 @@
 
 using namespace pax;
 
-int main(int argc, const char* argv[])
+int main()
 {
-    if (argc != 2) return 1;
+    Mem_Arena arena = {};
 
-    Mem_Arena   arena = {};
-    File_Handle file  = {};
+    String_8 source = PAX_STR_8("È.txt");
+    String_32 target = {};
 
     arena_init(&arena, system_reserve(16));
 
-    String_8 filename;
+    str8_to_utf32(source, &target, &arena);
 
-    str8_init(&filename, PAX_BYTE_PTR(argv[1]), 40);
-
-    File_Error error = file_open(&file, filename, &arena);
-
-    if (error != FILE_ERROR_NONE) {
-        printf("Error: %s (%i)\n", FILE_ERROR_NAMES[error], error);
-        printf("Unable to open file...\n");
-
-        return 1;
-    }
-
-    Mem_Block block = arena_push(&arena, 2048, 1);
-
-    block.length -= 1;
-
-    File_Result result = file_read(&file, &block);
-
-    block.length += 1;
-
-    if (result.error != FILE_ERROR_NONE) {
-        printf("Error: %s (%i)\n", FILE_ERROR_NAMES[error], error);
-        printf("Unable to read from file...\n");
-
-        return 1;
-    }
-
-    printf("%s", block.memory);
+    for (isize i = 0; i < target.length; i += 1)
+        printf("%u\n", target.memory[i]);
 }
