@@ -3,11 +3,11 @@
 
 #include "pax_defs.hpp"
 
-#define __PAX_TO_STRING__(x) #x
-#define __PAX_CONCAT__(x, y) x##y
+#define PAX_TO_STRING_IMPL(x) #x
+#define PAX_CONCAT_IMPL(x, y) x##y
 
-#define PAX_TO_STRING(x) __PAX_TO_STRING__(x)
-#define PAX_CONCAT(x, y) __PAX_CONCAT__(x, y)
+#define PAX_TO_STRING(x) PAX_TO_STRING_IMPL(x)
+#define PAX_CONCAT(x, y) PAX_CONCAT_IMPL(x, y)
 
 #define PAX_SIZE_OF(x)  sizeof(x)
 #define PAX_ALIGN_OF(x) alignof(x)
@@ -24,74 +24,74 @@
 #define PAX_CLAMP_BOTTOM(x, y) PAX_MAX((x), (y))
 #define PAX_CLAMP(x, y, z)     PAX_MAX(x, PAX_MIN(y, z))
 
-#define PAX_BYTE_PTR(x) ((pax::u8*)(x))
+#define PAX_U8_PTR(x) ((unsigned char*)(x))
 
 #define PAX_STR_8(x) \
-    String_8 {(pax::u8*)(x), PAX_ARRAY_ITEMS(x) - 1}
+    String_8 {PAX_U8_PTR(x), PAX_ARRAY_ITEMS(x) - 1}
 
 #define PAX_BLOCK(x) \
-    Mem_Block {(pax::u8*)(x), PAX_ARRAY_LENGTH(x)}
+    Mem_Block {PAX_U8_PTR(x), PAX_ARRAY_LENGTH(x)}
 
 namespace pax {
-
-//
-// Values
-//
-
-static const u8* const UTF_ERROR_NAMES[] = {
-    (const u8*) PAX_TO_STRING(UTF_ERROR_NONE),
-    (const u8*) PAX_TO_STRING(UTF_ERROR_UNREACHABLE),
-    (const u8*) PAX_TO_STRING(UTF_ERROR_INVALID),
-    (const u8*) PAX_TO_STRING(UTF_ERROR_OVERLONG),
-    (const u8*) PAX_TO_STRING(UTF_ERROR_SURROGATE),
-    (const u8*) PAX_TO_STRING(UTF_ERROR_OUT_OF_BOUNDS),
-};
 
 //
 // Types
 //
 
-struct String_8 {
-    u8*   memory;
-    isize length;
-};
-
-struct String_16 {
-    u16*  memory;
-    isize length;
-};
-
-struct String_32 {
-    u32*  memory;
-    isize length;
-};
-
-using String = String_8;
-
-enum UTF_Error {
+typedef enum {
     UTF_ERROR_NONE,
     UTF_ERROR_UNREACHABLE,
     UTF_ERROR_INVALID,
     UTF_ERROR_OVERLONG,
     UTF_ERROR_SURROGATE,
     UTF_ERROR_OUT_OF_BOUNDS,
-};
+} UTF_Error;
 
-struct UTF_Result {
+typedef struct {
+    UTF_Error error;
     u32       value;
     isize     units;
-    UTF_Error error;
-};
+} UTF_Result;
 
-struct Mem_Block {
+typedef struct {
     u8*   memory;
     isize length;
-};
+} String_8;
 
-struct Mem_Arena {
+typedef String_8 String;
+
+typedef struct {
+    u16*  memory;
+    isize length;
+} String_16;
+
+typedef struct {
+    u32*  memory;
+    isize length;
+} String_32;
+
+typedef struct {
+    u8*   memory;
+    isize length;
+} Mem_Block;
+
+typedef struct {
     u8*   memory;
     isize length;
     isize offset;
+} Mem_Arena;
+
+//
+// Values
+//
+
+static const String_8 UTF_ERROR_NAMES[] = {
+    PAX_STR_8(PAX_TO_STRING(UTF_ERROR_NONE)),
+    PAX_STR_8(PAX_TO_STRING(UTF_ERROR_UNREACHABLE)),
+    PAX_STR_8(PAX_TO_STRING(UTF_ERROR_INVALID)),
+    PAX_STR_8(PAX_TO_STRING(UTF_ERROR_OVERLONG)),
+    PAX_STR_8(PAX_TO_STRING(UTF_ERROR_SURROGATE)),
+    PAX_STR_8(PAX_TO_STRING(UTF_ERROR_OUT_OF_BOUNDS)),
 };
 
 //
@@ -104,7 +104,7 @@ bool unicode_is_valid(u32 value);
 
 bool unicode_is_invalid(u32 value);
 
-bool unicode_is_surrogate(u32 value);
+bool unicode_is_surr_any(u32 value);
 
 bool unicode_is_surr_low(u32 value);
 

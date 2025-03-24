@@ -13,7 +13,7 @@ bool unicode_is_invalid(u32 value)
     return (value >= 0xd800 && value < 0xe000) || (value >= 0x110000);
 }
 
-bool unicode_is_surrogate(u32 value)
+bool unicode_is_surr_any(u32 value)
 {
     return (value >= 0xdc00 && value < 0xe000);
 }
@@ -99,7 +99,7 @@ UTF_Result str8_encode(String_8 self, isize index, u32 value)
     if (unicode_is_invalid(value) == true)
         result.error = UTF_ERROR_INVALID;
 
-    if (unicode_is_surrogate(value) == true)
+    if (unicode_is_surr_any(value) == true)
         result.error = UTF_ERROR_SURROGATE;
 
     if (index < 0 || stop > self.length)
@@ -193,7 +193,7 @@ UTF_Result str8_decode(String_8 self, isize index)
     if (utf8_is_overlong(value, units) == true)
         result.error = UTF_ERROR_OVERLONG;
 
-    if (unicode_is_surrogate(value) == true)
+    if (unicode_is_surr_any(value) == true)
         result.error = UTF_ERROR_SURROGATE;
 
     if (unicode_is_invalid(value) == true)
@@ -388,7 +388,7 @@ UTF_Result str16_encode(String_16 self, isize index, u32 value)
     if (unicode_is_invalid(value) == true)
         result.error = UTF_ERROR_INVALID;
 
-    if (unicode_is_surrogate(value) == true)
+    if (unicode_is_surr_any(value) == true)
         result.error = UTF_ERROR_SURROGATE;
 
     if (index < 0 || stop > self.length)
@@ -625,7 +625,7 @@ UTF_Result str32_encode(String_32 self, isize index, u32 value)
     if (unicode_is_invalid(value) == true)
         result.error = UTF_ERROR_INVALID;
 
-    if (unicode_is_surrogate(value) == true)
+    if (unicode_is_surr_any(value) == true)
         result.error = UTF_ERROR_SURROGATE;
 
     if (index < 0 || stop > self.length)

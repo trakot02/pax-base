@@ -26,7 +26,9 @@
         #define PAX_SYSTEM PAX_SYSTEM_WINDOWS
 
     #else
+
         #define PAX_SYSTEM PAX_SYSTEM_UNKNOWN
+
     #endif
 
 #endif
@@ -38,7 +40,9 @@
         #define PAX_COMP PAX_COMP_MSVC
 
     #else
+
         #define PAX_COMP PAX_COMP_UNKNOWN
+
     #endif
 
 #endif
@@ -54,13 +58,17 @@
         #define PAX_ARCH PAX_ARCH_32
 
     #else
+
         #define PAX_ARCH PAX_ARCH_UNKNOWN
+
     #endif
 
 #endif
 
 #if PAX_ARCH == PAX_ARCH_UNKNOWN
+
     #error "Unable to detect architecture..."
+
 #endif
 
 namespace pax {
